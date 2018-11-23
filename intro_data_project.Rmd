@@ -32,6 +32,21 @@ load("brfss2013.RData")
 
 ## Part 1: Data
 
+Import and filter the data to only include important features.
+
+```{r}
+orig_dim <- dim(brfss2013)
+weight_diabetes <- brfss2013 %>%
+   select(sex, weight2,diabete3)
+new_dim <- dim(weight_diabetes)
+
+sprintf("Original Dimensions: [%s]x[%s]  New Dimensions: [%s]x[%s]", orig_dim[1],orig_dim[2],new_dim[1],new_dim[2])
+```
+
+
+```{r}
+head(weight_diabetes, n=10)
+```
 
 * * *
 
