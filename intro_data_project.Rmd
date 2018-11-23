@@ -42,7 +42,7 @@ new_dim <- dim(weight_diabetes)
 
 sprintf("Original Dimensions: [%s]x[%s]  New Dimensions: [%s]x[%s]", orig_dim[1],orig_dim[2],new_dim[1],new_dim[2])
 ```
-
+Vector has been reduced to 3 dimensions, but it still needs to be cleaned.
 
 ```{r}
 head(weight_diabetes, n=10)
@@ -52,12 +52,14 @@ head(weight_diabetes, n=10)
 
 ## Part 2: Research questions
 
-**Research quesion 1:**
+**Research quesion 1:**<br>
+What is the probability of having diabetes* based on gender?<br><br>
+**Research quesion 2:**<br>
+What is the distribution of weight from this data sample? What is the range of weights that fall within 66% of the sample set.<br><br>
+**Research quesion 3:**<br>
+Given results from RQ #2, what is the probability that a male over 200lbs has diabetes*?<br>
 
-**Research quesion 2:**
-
-**Research quesion 3:**
-
+__Assumption:__ _The feature 'diabete3' is a survey question asking the participant whether or not they know they have diabetes. I will be interpreting the response of this survey question to be either a positive or negative diagnosis on diabetes, but in actuality data will reflect the respondants' awareness of whether or not they have diabetes._
 
 * * *
 

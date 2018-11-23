@@ -393,6 +393,7 @@ $(document).ready(function () {
 <a class="sourceLine" id="cb3-5" data-line-number="5"></a>
 <a class="sourceLine" id="cb3-6" data-line-number="6"><span class="kw">sprintf</span>(<span class="st">&quot;Original Dimensions: [%s]x[%s]  New Dimensions: [%s]x[%s]&quot;</span>, orig_dim[<span class="dv">1</span>],orig_dim[<span class="dv">2</span>],new_dim[<span class="dv">1</span>],new_dim[<span class="dv">2</span>])</a></code></pre></div>
 <pre><code>## [1] &quot;Original Dimensions: [491775]x[330]  New Dimensions: [491775]x[3]&quot;</code></pre>
+<p>Vector has been reduced to 3 dimensions, but it still needs to be cleaned.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="kw">head</span>(weight_diabetes, <span class="dt">n=</span><span class="dv">10</span>)</a></code></pre></div>
 <pre><code>##       sex weight2 diabete3
 ## 1  Female     250       No
@@ -409,9 +410,8 @@ $(document).ready(function () {
 </div>
 <div id="part-2-research-questions" class="section level2">
 <h2>Part 2: Research questions</h2>
-<p><strong>Research quesion 1:</strong></p>
-<p><strong>Research quesion 2:</strong></p>
-<p><strong>Research quesion 3:</strong></p>
+<p><strong>Research quesion 1:</strong><br> What is the probability of having diabetes* based on gender?<br><br> <strong>Research quesion 2:</strong><br> What is the distribution of weight from this data sample? What is the range of weights that fall within 66% of the sample set.<br><br> <strong>Research quesion 3:</strong><br> Given results from RQ #2, what is the probability that a male over 200lbs has diabetes*?<br></p>
+<p><strong>Assumption:</strong> <em>The feature ‘diabete3’ is a survey question asking the participant whether or not they know they have diabetes. I will be interpreting the response of this survey question to be either a positive or negative diagnosis on diabetes, but in actuality data will reflect the respondants’ awareness of whether or not they have diabetes.</em></p>
 <hr />
 </div>
 <div id="part-3-exploratory-data-analysis" class="section level2">
