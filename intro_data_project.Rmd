@@ -7,17 +7,21 @@ output:
     theme: spacelab
 ---
 
-## Setup
+<br>
 
-### Load packages
+## Part 0: Setup
+
+#### Load packages
 
 ```{r load-packages, message = FALSE}
 library(ggplot2)
 library(dplyr)
 library(Rgraphviz)
+library(knitr)
+library(grid)
 ```
 
-### Load data
+#### Load data
 
 Make sure your data and R Markdown files are in the same directory. When loaded
 your data file will be called `brfss2013`. Delete this note when before you submit 
@@ -33,36 +37,160 @@ load("brfss2013.RData")
 
 ## Part 1: Data
 
-Import and filter the data to only include important features.
+Import and filter the data to only include important features. Reduce features to 3 and then clean the data.
 
-```{r}
+```{r error=FALSE, warning=FALSE,results='asis'}
+# Import original file:
 orig_dim <- dim(brfss2013)
+
+# Select only relevant features:
 weight_diabetes <- brfss2013 %>%
    select(sex, weight2,diabete3)
+
+# Clean data:
+# 1.Weight strings -> numeric
+weight_diabetes$weight2 <- as.numeric(as.character(weight_diabetes$weight2))
 new_dim <- dim(weight_diabetes)
 
-sprintf("Original Dimensions: [%s]x[%s]  New Dimensions: [%s]x[%s]", orig_dim[1],orig_dim[2],new_dim[1],new_dim[2])
-```
-Vector has been reduced to 3 dimensions, but it still needs to be cleaned.
-
-```{r}
-weight_diabetes[weight_diabetes == ""] <- NA
+# 2. Remove Null Weights and Weights over 400
 weight_diabetes <- na.omit(weight_diabetes)
-head(weight_diabetes, n=10)
+weight_diabetes <- filter(weight_diabetes, weight2 <= 400)
+
+# 3. Remove Diabetes Responses
+target <- c("Yes", "No")
+weight_diabetes <- filter(weight_diabetes, diabete3 %in% target)
+
+# 4. Add index and reorder
+weight_diabetes$index <- seq.int(nrow(weight_diabetes))
+weight_diabetes <- weight_diabetes[c(4,3,1,2)]
+clean_dim <- dim(weight_diabetes)
+
+# Show data:
+kable(head(weight_diabetes,n=5), caption="Diabetes Data Set",padding=0, format = "markdown",align="l")
 ```
+__Original dimensions:__ <br>[`r orig_dim[1]`] x [`r orig_dim[2]`]<br>
+__Reduced dimensions:__ <br> [`r new_dim[1]`] x [`r new_dim[2]`]<br>
+__After cleaning:__ <br>[`r clean_dim[1]`] x [`r clean_dim[2]`]
+
+
+<br>
+Function for retrieving counts:
+```{r}
+feature_vcounts <- function(df, f) {
+  df %>%
+    group_by_at(f) %>%
+      count()
+}
+
+bin_min_sample <- function(p) {
+  n = 10
+  a = 10/p
+  b = 10/(1-p)
+  max(c(a,b))
+}
+
+binom_prob_df <- function(df, f, target) {
+  new_df <- feature_vcounts(df,f)
+  new_df$n[new_df[f] == target]/sum(new_df$n)
+}
+
+binom_prob_vec <- function(v, target) {
+  sum(v == target)/length(v)
+}
+
+binom_sample <- function(s,v)
+  sample(v, size=s, replace=TRUE)
+
+binom_sample_dist <- function(df,f,target) {
+  sample_dist <- c()
+  for (i in 1:10001) {
+    prob <- binom_prob_vec(binom_sample(100,df[,f]),target)
+    sample_dist <- append(sample_dist,prob)
+  }
+  
+  sample_dist
+}
+```
+
+
+
 
 * * *
 
 ## Part 2: Research questions
 
-**Research quesion 1:**<br>
-What are the distributions of the updated data set: sex, weight, diabete3?<br><br>
-**Research quesion 2:**<br>
-What is the probability that a participant is heavy (weight > 200) if they are male?<br><br>
-**Research quesion 3:**<br>
-What is the probability that a participant has diabetes if they are male and heavy (weight > 200)?<br>
+### **Research quesion 1:**<br>
+##### What are the distributions of the updated data set: sex, weight, diabete3?<br><br>
 
-__Assumption:__ _The feature 'diabete3' is a survey question asking the participant whether or not they know they have diabetes. I will be interpreting the response of this survey question to be either a positive or negative diagnosis on diabetes, but in actuality data will reflect the respondants' awareness of whether or not they have diabetes._
+#### Weight2: (Continuous)
+
+```{r error=FALSE, warning=FALSE, message=FALSE}
+centered <- theme(plot.title = element_text(hjust = 0.5))
+hist_weight <-ggplot(data=weight_diabetes,aes(weight2))+
+  geom_histogram()
+hist_weight + ggtitle("Histogram [Weight]") + centered
+weight_diabetes$log_weight <- log(weight_diabetes$weight2)
+hist_log_weight <- ggplot(data=weight_diabetes,aes(log_weight))+
+  geom_histogram()
+hist_log_weight + ggtitle("Histogram [Log_Weight]") + centered
+
+```
+For 'Weight2', the distribution is right skewed while the log of Weight 2 appears to be nearly normal.
+<br>
+
+#### Sex: (Discrete-Binary)
+```{r warning=FALSE}
+sex_male_distribution <- binom_sample_dist(weight_diabetes,"sex","Male")
+
+ggplot()+
+  aes(x=sex_male_distribution)+
+  geom_bar(width = 0.05)
+```
+
+```{r warning=FALSE}
+sex_female_distribution <- binom_sample_dist(weight_diabetes,"sex","Female")
+
+ggplot()+
+  aes(x=sex_female_distribution)+
+  geom_bar(width = 0.05)
+```
+<br> For 'Sex', the probability of the participant being male is slightly higher at around .52 <br>
+
+#### Diabete3: (Discrete-Binary)
+```{r warning=FALSE}
+diabetes_yes_distribution <- binom_sample_dist(weight_diabetes,"diabete3","Yes")
+
+ggplot()+
+  aes(x=diabetes_yes_distribution)+
+  geom_bar(width = 0.05)
+```
+
+<br>For 'Diabete3', the probability of the participant having diabetes is low at around .15<br>
+
+```{r warning=FALSE}
+diabetes_no_distribution <- binom_sample_dist(weight_diabetes,"diabete3","No")
+
+ggplot()+
+  aes(x=diabetes_no_distribution)+
+  geom_bar(width = 0.05)
+```
+
+For 'Diabete3', the probability of the participant not having diabetes is high at around .85<br>
+
+### **Research question 2:**<br>
+#### What is the probability that a participant is heavy (weight > 200) if they are male?<br><br>
+
+```{r warning=FALSE}
+
+
+```
+
+
+### **Research question 3:**<br>
+#### What is the probability that a participant has diabetes if they are male and heavy (weight > 200)?
+<br>
+
+
 
 
 
@@ -98,6 +226,12 @@ in the project you submit. Delete this note when before you submit your work.
 
 
 ## Part 4: Conclusion
+
+__Assumptions Made:__ 
+
+(1) _The feature 'diabete3' is a survey question asking the participant whether or not they know they have diabetes. I will be interpreting the response of this survey question to be either a positive or negative diagnosis on diabetes, but in actuality data will reflect the respondants' awareness of whether or not they have diabetes._ <br><br>
+
+(2) _The feature 'diabete3' has other options besides Yes/No. I removed these other results so as to limit the discrete options, but in actuality other the two other responses may also be important for consideration._
 
 ```{r}
 # Example code by: http://www.harrysurden.com/wordpress/archives/292
@@ -164,14 +298,12 @@ rEG <- addEdge(nodeNames[3], nodeNames[6], rEG, 1)
 rEG <- addEdge(nodeNames[3], nodeNames[7], rEG, 10)
  
 eAttrs <- list()
- 
 q<-edgeNames(rEG)
  
 
 
 
 # Add the probability values to the the branch lines
- 
 eAttrs$label <- c(toString(a),toString(notA),
  toString(bGivena), toString(notbGivena),
  toString(bGivenNota), toString(notbGivenNota))
@@ -189,15 +321,10 @@ plot(rEG, edgeAttrs=eAttrs, attrs=attributes)
  
 #Add the probability values to the leaves of A&B, A&B', A'&B, A'&B'
 text(500,420,aANDb, cex=.8)
- 
 text(500,280,aANDnotb,cex=.8)
- 
 text(500,160,notaANDb,cex=.8)
- 
 text(500,30,notaANDnotb,cex=.8)
- 
 text(340,440,"(B | A)",cex=.8)
- 
 text(340,230,"(B | A')",cex=.8)
  
 #Write a table in the lower left of the probablites of A and B
