@@ -496,11 +496,6 @@ about the relationship between average speed and distance.
 
 ```{r avg-speed-dist-scatter}
 # type your code for Question 9 here, and Knit
-avg_speed_check <- nycflights %>%
-
-
-ggplot(data=avg_speed_df, aes(avg_speed,avg_distance)) +
-  geom_point()
 ```
 
 
