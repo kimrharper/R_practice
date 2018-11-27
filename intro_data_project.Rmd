@@ -31,7 +31,46 @@ your work.
 load("brfss2013.RData")
 ```
 
+Functions for analysis:
+```{r}
+feature_vcounts <- function(df, f) {
+  df %>%
+    group_by_at(f) %>%
+      count()
+}
 
+bin_min_sample <- function(p) {
+  n = 10
+  a = 10/p
+  b = 10/(1-p)
+  max(c(a,b))
+}
+
+binom_prob_df <- function(df, f, target) {
+  new_df <- feature_vcounts(df,f)
+  new_df$n[new_df[f] == target]/sum(new_df$n)
+}
+
+binom_prob_vec <- function(v, target) {
+  sum(v == target)/length(v)
+}
+
+binom_sample <- function(s,v)
+  sample(v, size=s, replace=TRUE)
+
+binom_sample_dist <- function(df,f,target) {
+  sample_dist <- c()
+  for (i in 1:10001) {
+    prob <- binom_prob_vec(binom_sample(100,df[,f]),target)
+    sample_dist <- append(sample_dist,prob)
+  }
+  return(sample_dist)
+}
+
+to_percent <- function(pvalue) {
+  paste(round(pvalue*100,digits= 2),"%",sep="")
+}
+```
 
 * * *
 
@@ -74,43 +113,6 @@ __After cleaning:__ <br>[`r clean_dim[1]`] x [`r clean_dim[2]`]
 
 
 <br>
-Function for retrieving counts:
-```{r}
-feature_vcounts <- function(df, f) {
-  df %>%
-    group_by_at(f) %>%
-      count()
-}
-
-bin_min_sample <- function(p) {
-  n = 10
-  a = 10/p
-  b = 10/(1-p)
-  max(c(a,b))
-}
-
-binom_prob_df <- function(df, f, target) {
-  new_df <- feature_vcounts(df,f)
-  new_df$n[new_df[f] == target]/sum(new_df$n)
-}
-
-binom_prob_vec <- function(v, target) {
-  sum(v == target)/length(v)
-}
-
-binom_sample <- function(s,v)
-  sample(v, size=s, replace=TRUE)
-
-binom_sample_dist <- function(df,f,target) {
-  sample_dist <- c()
-  for (i in 1:10001) {
-    prob <- binom_prob_vec(binom_sample(100,df[,f]),target)
-    sample_dist <- append(sample_dist,prob)
-  }
-  
-  sample_dist
-}
-```
 
 
 
@@ -134,6 +136,11 @@ hist_log_weight <- ggplot(data=weight_diabetes,aes(log_weight))+
   geom_histogram()
 hist_log_weight + ggtitle("Histogram [Log_Weight]") + centered
 
+head(weight_diabetes$log_weight, n=10)
+
+head(weight_diabetes$weight2,n=10)
+
+
 ```
 For 'Weight2', the distribution is right skewed while the log of Weight 2 appears to be nearly normal.
 <br>
@@ -145,7 +152,11 @@ sex_male_distribution <- binom_sample_dist(weight_diabetes,"sex","Male")
 ggplot()+
   aes(x=sex_male_distribution)+
   geom_bar(width = 0.05)
+
+gp_male <- binom_prob_vec(weight_diabetes$sex,"Male")
 ```
+<br> For 'Sex', the probability of the participant being male is slightly higher at __`r to_percent(gp_male)`__ <br>
+
 
 ```{r warning=FALSE}
 sex_female_distribution <- binom_sample_dist(weight_diabetes,"sex","Female")
@@ -153,8 +164,10 @@ sex_female_distribution <- binom_sample_dist(weight_diabetes,"sex","Female")
 ggplot()+
   aes(x=sex_female_distribution)+
   geom_bar(width = 0.05)
+
+gp_female <- binom_prob_vec(weight_diabetes$sex,"Female")
 ```
-<br> For 'Sex', the probability of the participant being male is slightly higher at around .52 <br>
+<br> For 'Sex', the probability of the participant being female is slightly lower at __`r to_percent(gp_female)`__ <br>
 
 #### Diabete3: (Discrete-Binary)
 ```{r warning=FALSE}
@@ -163,9 +176,11 @@ diabetes_yes_distribution <- binom_sample_dist(weight_diabetes,"diabete3","Yes")
 ggplot()+
   aes(x=diabetes_yes_distribution)+
   geom_bar(width = 0.05)
+
+dp_yes <- binom_prob_vec(weight_diabetes$diabete3,"Yes")
 ```
 
-<br>For 'Diabete3', the probability of the participant having diabetes is low at around .15<br>
+<br>For 'Diabete3', the probability of the participant having diabetes is low at around __`r to_percent(dp_yes)`__<br>
 
 ```{r warning=FALSE}
 diabetes_no_distribution <- binom_sample_dist(weight_diabetes,"diabete3","No")
@@ -173,18 +188,39 @@ diabetes_no_distribution <- binom_sample_dist(weight_diabetes,"diabete3","No")
 ggplot()+
   aes(x=diabetes_no_distribution)+
   geom_bar(width = 0.05)
+
+dp_no <- binom_prob_vec(weight_diabetes$diabete3,"No")
+
 ```
 
-For 'Diabete3', the probability of the participant not having diabetes is high at around .85<br>
+For 'Diabete3', the probability of the participant not having diabetes is high at around __`r to_percent(dp_no)`__<br>
 
 ### **Research question 2:**<br>
-#### What is the probability that a participant is heavy (weight > 200) if they are male?<br><br>
+#### What is the probability that a participant is heavy (weight > 200)?<br><br>
 
 ```{r warning=FALSE}
+# probability that participant is 200 lbs or more using right tailed distribution
+sd_weight <- sd(weight_diabetes$weight2)
+mean_weight <- mean(weight_diabetes$weight2)
+z <- (200-mean_weight)/sd_weight
+righttailed <-1-pnorm(z)
 
+# probability that participant is 200 lbs or more using lognormed distribution
+sd_weight <- sd(weight_diabetes$log_weight)
+mean_weight <- mean(weight_diabetes$log_weight)
+z <- (log(200)-mean_weight)/sd_weight
+1-pnorm(z)
 
+# probability that participant is 200 lbs or more
+pvalue=1-exp(pnorm(log(200),mean_weight,sd_weight, log=TRUE))
+pvalue
+
+# percentage of heavy vs not heavy
+weight_diabetes$heavy <- ifelse(weight_diabetes$weight2 < 200,"not_heavy","heavy")
+actual <- binom_prob_vec(weight_diabetes$heavy,"heavy")
 ```
-
+#### The probability that a participant is heavy is based on lognormed z-score is  __`r pvalue`__. The actual percentage is __`r actual`__ 
+<br>
 
 ### **Research question 3:**<br>
 #### What is the probability that a participant has diabetes if they are male and heavy (weight > 200)?
