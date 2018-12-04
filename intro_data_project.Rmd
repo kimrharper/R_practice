@@ -6,7 +6,12 @@ output:
     highlight: pygments
     theme: spacelab
 ---
-
+__Dataset:__ BRFSS <br><br>
+__Source:__ https://www.cdc.gov/brfss/<br><br>
+__Summary:__ The data set is a collection of ~400,000 adult interviews across the United States on health related topics. The data is a combination of self-reported answers and reported biometrics. The features are continuous, ordinal, and discrete. Some features have missing values so data preprocessing is essential. Because the large data set is collected across all 50 states, many ages, and both genders, the sample can be generalized as a sample of the US adult population. Correlation can be inferred, but not causality.<br><br>
+__Goals:__ I want to look at three specific features (gender, reported diabetes, and weight), to assess the probability of certain demographics having diabetes and to know more about basic features pertaining to the adult population in the US.<br><br>
+__Assumption(s):__ 
+The feature 'diabete3' has other options besides Yes/No. I removed these other results so as to limit the discrete options, but in actuality other the two other responses may also be important for consideration.<br>
 <br>
 
 ## Part 0: Setup
@@ -22,11 +27,7 @@ library(grid)
 ```
 
 #### Load data
-
-Make sure your data and R Markdown files are in the same directory. When loaded
-your data file will be called `brfss2013`. Delete this note when before you submit 
-your work. 
-
+Load the file:
 ```{r load-data}
 load("brfss2013.RData")
 ```
@@ -81,7 +82,6 @@ to_percent <- function(pvalue) {
 ## Part 1: Data
 
 Import and filter the data to only include important features. Reduce features to 3 and then clean the data.
-
 ```{r error=FALSE, warning=FALSE,results='asis'}
 # Import original file:
 orig_dim <- dim(brfss2013)
@@ -126,15 +126,19 @@ __After cleaning:__ <br>[`r clean_dim[1]`] x [`r clean_dim[2]`]
 ## Part 2: Research questions
 
 ### **Research quesion 1:**<br>
-##### What are the distributions of the updated data set: sex, weight, diabete3?<br><br>
+##### What are the distributions of the updated data set: sex, weight, diabete3?<br>
+I am interested in knowing if the distributions are generalizeable. If the sample is large enough and if each feature has a near-normal distribution, I can assess probability and correlation between the three features.<br>
 
 
 ### **Research question 2:**<br>
-#### What is the probability that a participant is heavy (weight > 200)?<br><br>
+#### What is the probability that a participant is heavy (weight > 200)?<br>
+I chose this metric for heavy arbitrarily, but I would like to know more about the probaility of a US citizen weighing more than 200 lbs. It is a stereotype that US citizens are obese/overweight and I would like to have a better understanding of the weight distribution for adults in the US.<br>
 
 
 ### **Research question 3:**<br>
-#### What is the probability that a participant has diabetes if they are male and heavy (weight > 200)?
+#### What is the probability that a participant reports having diabetes given that they are male?<br>
+Because I'm male, I would like to know the basic probability that I would have diabetes given that I am male.
+<br>
 
 * * *
 
@@ -197,7 +201,7 @@ ggplot()+
 dp_yes <- binom_prob_vec(weight_diabetes$diabete3,"Yes")
 ```
 
-<br>For 'Diabete3', the probability of the participant having diabetes is low at around __`r to_percent(dp_yes)`__<br>
+<br>For 'Diabete3', the probability of the participant reporting diabetes is low at around __`r to_percent(dp_yes)`__<br>
 
 ```{r warning=FALSE}
 diabetes_no_distribution <- binom_sample_dist(weight_diabetes,"diabete3","No")
@@ -210,7 +214,7 @@ dp_no <- binom_prob_vec(weight_diabetes$diabete3,"No")
 
 ```
 
-For 'Diabete3', the probability of the participant not having diabetes is high at around __`r to_percent(dp_no)`__<br>
+For 'Diabete3', the probability of the participant reporting that they do not have diabetes is high at around __`r to_percent(dp_no)`__<br>
 
 
 
@@ -240,25 +244,32 @@ actual <- binom_prob_vec(weight_diabetes$heavy,"heavy")
 <br>
 
 
-
-
-
 ### **Research question 3:**
 ```{r}
-gp_male
-gp_female
+#gp_male
+#gp_female
 
-dp_no
-dp_yes
+#dp_no
+#dp_yes
 
 male_diabetes_prob <- binom_prob_vec(subgroup_df(weight_diabetes,'sex','Male')$diabete3,"Yes")
 female_diabetes_prob <- binom_prob_vec(subgroup_df(weight_diabetes,'sex','Female')$diabete3,"Yes")
-female_diabetes_prob
-male_diabetes_prob
+#female_diabetes_prob
+#male_diabetes_prob
 ```
 
-**NOTE:** This is not part of the project assignment
-_Here is a tree diagram to help show the probability distribution_
+The probability that the participant reports having diabetes given that he is male is the probability that the participant is male times the probability that a participant reported having diabetes:
+
+
+```{r}
+to_percent(gp_male * dp_yes)
+
+```
+The probability that a participant reported diabetes given that the participant is male is __`r to_percent(gp_male * dp_yes)`__.
+
+#### _Here is a tree diagram to help show the probability distribution_
+**NOTE:** This part is built from a boilerplate template. It is another method for confirming the probability and exploring the data visually.
+
 ```{r}
 # Tutorial by: http://www.harrysurden.com/wordpress/archives/292
 # R Conditional Probability Tree Diagram
@@ -266,43 +277,24 @@ _Here is a tree diagram to help show the probability distribution_
 # The Rgraphviz graphing package must be installed to do this
 require("Rgraphviz")
  
-# Change the three variables below to match your actual values
-# These are the values that you can change for your own probability tree
-# From these three values, other probabilities (e.g. prob(b)) will be calculated 
- 
-# Probability of a
+# Assign probabilities
 a<-round(gp_male,digits= 3)
- 
-# Probability (b | a)
 bGivena<-round(male_diabetes_prob,digits= 3)
- 
-# Probability (b | ¬a)
 bGivenNota<-round(female_diabetes_prob,digits= 3)
  
-###################### Everything below here will be calculated
- 
-# Calculate the rest of the values based upon the 3 variables above
+# Calculations
 notbGivena<-1-bGivena
 notA<-1-a
 notbGivenNota<-1-bGivenNota
- 
-#Joint Probabilities of a and B, a and notb, nota and b, nota and notb
 aANDb<-a*bGivena
 aANDnotb<-a*notbGivena
 notaANDb <- notA*bGivenNota
 notaANDnotb <- notA*notbGivenNota
- 
-# Probability of B
 b<- aANDb + notaANDb
 notB <- 1-b
- 
-# Bayes theorum - probabiliyt of A | B
-# (a | b) = Prob (a AND b) / prob (b)
 aGivenb <- aANDb / b
- 
-# These are the labels of the nodes on the graph
-# To signify "Not A" - we use A' or A prime 
- 
+
+# Text notation 
 node1<-"Pa"
 node2<-"M"
 node3<-"F"
@@ -311,7 +303,6 @@ node5<-"M&D'"
 node6<-"F&D"
 node7<-"F&D'"
 nodeNames<-c(node1,node2,node3,node4, node5,node6, node7)
- 
 rEG <- new("graphNEL", nodes=nodeNames, edgemode="directed")
  
 # Draw the "lines" or "branches" of the probability Tree
@@ -352,20 +343,13 @@ text(340,130,"(D | F')",cex=.8)
 #Write a table in the lower left of the probablites of A and B
 text(80,50,paste("P(M):",a),cex=.9, col="darkgreen")
 text(80,20,paste("P(F):",notA),cex=.9, col="darkgreen")
- 
 text(160,50,paste("P(D):",round(b,digits=2)),cex=.9)
 text(160,20,paste("P(D'):",round(notB, 2)),cex=.9)
- 
 text(100,220,paste("P(M|D): ",round(aGivenb,digits=2)),cex=.9,col="blue")
-
 ```
 
 
 ## Part 4: Conclusion
+I have a better understanding of both the weight distribution of adults in the US and of the probability that I have diabetes given that I am male. I still have a lot that I need to do with regards to this data set as I have barely scratched the surface. My next step would be to check and see how weight influences the probability that I have diabetes (i.e. What is the probability that I have diabetes given that I am both male and under 200lbs). I would also like to explore other features (e.g.age) to see how these other features might relate to diabetes.
 
-__Assumptions Made:__ 
-
-(1) _The feature 'diabete3' is a survey question asking the participant whether or not they know they have diabetes. I will be interpreting the response of this survey question to be either a positive or negative diagnosis on diabetes, but in actuality data will reflect the respondants' awareness of whether or not they have diabetes._ <br><br>
-
-(2) _The feature 'diabete3' has other options besides Yes/No. I removed these other results so as to limit the discrete options, but in actuality other the two other responses may also be important for consideration._
 
