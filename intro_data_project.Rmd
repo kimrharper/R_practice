@@ -8,11 +8,9 @@ output:
 ---
 __Dataset:__ BRFSS <br><br>
 __Source:__ https://www.cdc.gov/brfss/<br><br>
-__Summary:__ The data set is a collection of ~400,000 adult interviews across the United States on health related topics. The data is a combination of self-reported answers and reported biometrics. The features are continuous, ordinal, and discrete. Some features have missing values so data preprocessing is essential. Because the large data set is collected across all 50 states, many ages, and both genders, the sample can be generalized as a sample of the US adult population. Correlation can be inferred, but not causality.<br><br>
-__Goals:__ I want to look at three specific features (gender, reported diabetes, and weight), to assess the probability of certain demographics having diabetes and to know more about basic features pertaining to the adult population in the US.<br><br>
-__Assumption(s):__ 
-The feature 'diabete3' has other options besides Yes/No. I removed these other results so as to limit the discrete options, but in actuality other the two other responses may also be important for consideration.<br>
-<br>
+__Summary:__ The data set is a collection of ~400,000 adult interviews across the United States on health related topics. The data is a combination of self-reported answers and reported biometrics. The features are continuous, ordinal, and discrete. Some features have missing values so data preprocessing is essential. Because the participants were selected randomly the sample can be generalized. This data is not from experimental research so while correlation can be inferred causality can not be inferred.<br><br>
+__Goals:__ Explore any correlations among gender, weight, and weight<br><br>
+
 
 ## Part 0: Setup
 
@@ -115,19 +113,14 @@ __Original dimensions:__ <br>[`r orig_dim[1]`] x [`r orig_dim[2]`]<br>
 __Reduced dimensions:__ <br> [`r new_dim[1]`] x [`r new_dim[2]`]<br>
 __After cleaning:__ <br>[`r clean_dim[1]`] x [`r clean_dim[2]`]
 
-
 <br>
-
-
-
-
 * * *
 
 ## Part 2: Research questions
 
 ### **Research quesion 1:**<br>
-##### What are the distributions of the updated data set: sex, weight, diabete3?<br>
-I am interested in knowing if the distributions are generalizeable. If the sample is large enough and if each feature has a near-normal distribution, I can assess probability and correlation between the three features.<br>
+##### Is there any correlation between sex and weight? (vars: sex, weight)<br>
+Because gender is a key variable in biometrics, it is important to explore whether gender might correllate to other variables. In this case, we are looking at whether or not sex correllates to weight.<br>
 
 
 ### **Research question 2:**<br>
@@ -258,7 +251,7 @@ female_diabetes_prob <- binom_prob_vec(subgroup_df(weight_diabetes,'sex','Female
 #male_diabetes_prob
 ```
 
-The probability that the participant reports having diabetes given that he is male is the probability that the participant is male times the probability that a participant reported having diabetes:
+The probability that the participant reports having diabetes given that he is male is the probability that the participant is male multiplied by the probability that a participant reported having diabetes:
 
 
 ```{r}
