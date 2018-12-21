@@ -1,16 +1,17 @@
 ---
-title: "Exploring the BRFSS data"
+title: "Exploring diabetes in the BRFSS data"
 output: 
   html_document: 
     fig_height: 4
     highlight: pygments
     theme: spacelab
 ---
-__Dataset:__ BRFSS <br><br>
+__Dataset:__ Behavioral Risk Factor Surveillance System Data <br><br>
 __Source:__ https://www.cdc.gov/brfss/<br><br>
-__Summary:__ The data set is a collection of ~400,000 adult interviews across the United States on health related topics. The data is a combination of self-reported answers and reported biometrics. The features are continuous, ordinal, and discrete. Some features have missing values so data preprocessing is essential. Because the participants were selected randomly the sample can be generalized. This data is not from experimental research so while correlation can be inferred causality can not be inferred.<br><br>
-__Goals:__ Explore any correlations among gender, weight, and weight.<br><br>
+__Summary:__ The data set is a collection of ~400,000 adult interviews across the United States on health related topics. BRFSS started in the 1980s and has been used to monitor pervasive illnesses in the US through questionnaires. The research is a standardized questionairre with additional questions varying by state. Interviewers reach partipant in house and by telephone. The telephone surveys are conducted using "Random Digit Dialing (RDD) techniques on both landlines and cell phones" so much of the data appears to be from random sampling. The research is retroactive and not a designed experiment so while correlation can be inferred, causality cannot.
 
+The features in the data set are both continuous and categorical. Some features are missing values so data preprocessing is essential. Because the participants were selected randomly the sample can be generalized. <br><br>
+__Goals:__ Explore any correlations among gender, weight, and weight.<br><br>
 
 ## Part 0: Setup
 ```{r load-packages, message = FALSE}
@@ -20,6 +21,8 @@ library(Rgraphviz)
 library(knitr)
 library(grid)
 library(gridExtra)
+library(ggmosaic)
+library(tidyverse)
 ```
 
 ```{r load-data}
@@ -74,18 +77,16 @@ to_percent <- function(pvalue) {
 
 ## Part 1: Data
 
-Import and filter the data to only include important features. Reduce features to 3 and then clean the data.
+Import and filter the data to only include important features relevant to diabetes, gender, weight, and age. The features are reduced 4 columns and then the data is cleaned to remove rows that have invalid data or data that has less pertinent information.
 ```{r error=FALSE, warning=FALSE,results='asis'}
 # Import original file:
 orig_dim <- dim(brfss2013)
-
-#colnames(brfss2013)
 
 # Select only relevant features:
 weight_diabetes <- brfss2013 %>%
    select(sex, X_ageg5yr, weight2,diabete3)
 
-# Clean data:
+# ------------------Cleaning data------------------
 # 1.Weight strings -> numeric
 weight_diabetes$weight2 <- as.numeric(as.character(weight_diabetes$weight2))
 new_dim <- dim(weight_diabetes)
@@ -106,6 +107,8 @@ clean_dim <- dim(weight_diabetes)
 # Show data:
 kable(head(weight_diabetes,n=5), caption="Diabetes Data Set",padding=0, format = "markdown",align="l")
 ```
+The data looks simplified and only contains the features wanted for this project. Because the data needs to be anonymized, age ranges are a safe alternative to specific ages. Age ranges will be used as categorial information for this data set.
+
 __Original dimensions:__ <br>[`r orig_dim[1]`] x [`r orig_dim[2]`]<br>
 __Reduced dimensions:__ <br> [`r new_dim[1]`] x [`r new_dim[2]`]<br>
 __After cleaning:__ <br>[`r clean_dim[1]`] x [`r clean_dim[2]`]
@@ -121,12 +124,12 @@ __After cleaning:__ <br>[`r clean_dim[1]`] x [`r clean_dim[2]`]
 Because gender is a key variable in biometrics, it is important to explore whether gender might correllate to other variables. In this case, we are looking at whether or not sex correllates with weight.<br>
 
 ### **Research question 2:**<br>
-#### Do weight and gender correlate with diabetes? How? (vars: sex, weight2, diabete3)<br>
+#### Do weight, age, and/or gender correlate with diabetes? How? (vars: sex, X_ageg5yr, weight2, diabete3)<br>
 The goal of this exploratory project is to determine whether or not weight/gender correlate with diabetes. Knowledge of any correlation could be helpful with regards to informing patients of their likelihood of having diabetes based on their gender and weight.<br>
 
 
 ### **Research question 3:**<br>
-#### What is the liklihood that a participant reports having diabetes given that they are male and weigh 200 lbs or more (given the sample data)? (vars: sex, weight2, diabete3)<br>
+#### What is the liklihood that a participant from the sample reports having diabetes given that they are male and weigh 200 lbs or more (given the sample data)? (vars: sex, weight2, diabete3)<br>
 Knowing the liklihood of having a positive diagnosis for diabetes can be valuable for both researchers and patients. We will look at the example scenario and determine what the likelihood is for a male who weighs more than 200 lbs to report having diabetes. 
 <br>
 
@@ -135,6 +138,7 @@ Knowing the liklihood of having a positive diagnosis for diabetes can be valuabl
 ## Part 3: Exploratory data analysis
 
 ### **Research question 1:**
+##### Is there any correlation among sex, weight, and age? (vars: sex, weight2, X_ageg5yr)<br>
 _Weight2_ is continuous  so it is important to first check the distribution of the data. _Sex_ is binary categorical so we will visualize it's distribution with a bar plot.<br>
 
 ```{r fig.width=12, fig.height=3, error=FALSE, warning=FALSE, message=FALSE}
@@ -146,7 +150,7 @@ hist_log_weight <- ggplot(data=weight_diabetes,aes(log_weight, fill=log_weight))
   geom_histogram(fill='mediumturquoise',color='white') + ggtitle("Histogram [Log_Weight]") + centered
 grid.arrange(hist_weight, hist_log_weight, ncol = 2)
 ```
-<br>For _Weight2_, the distribution is right skewed while the log of _Weight2_ is nearly normal.
+<br>For _Weight2_, the distribution is right skewed while the log of _Weight2_ is nearly normal. Because the data is nearly normal and unimodal, a frequentist approach using inferential statistics can be used.
 <br>
 
 ```{r fig.width=4, fig.height=3, error=FALSE, warning=FALSE, message=FALSE}
@@ -155,7 +159,7 @@ gender_count <- ggplot(data=weight_diabetes,aes(sex, fill = sex))+
   geom_bar(color='white') + ggtitle("Gender") + centered 
 gender_count
 ```
-<br>There are more female participants than male participants.
+<br>There are more female participants than male participants by a margin much larger than the general population in the US. This could be an indicator that the sampling method was not entirely random with regards to gender sampling. Nonetheles, the data sample is large enough to continue evaluating health risk factors.
 
 <br>
 ```{r fig.width=12, fig.height=3, error=FALSE, warning=FALSE, message=FALSE}
@@ -163,20 +167,34 @@ age_count <- ggplot(data=weight_diabetes,aes(X_ageg5yr)) +
   geom_bar(fill='salmon',color='white') + ggtitle("Age") + centered
 age_count
 ```
-
+The age range appears to be left skewed with extremes at both tails. The large tails are most likely a result of binning where the youngest and oldest age groups account for larger age ranges.
 <br>
 
 ```{r fig.width=12, fig.height=3, error=FALSE, warning=FALSE, message=FALSE}
-p<-ggplot(weight_diabetes, aes(x=X_ageg5yr,y=weight2, color=sex)) +
+ggplot(weight_diabetes, aes(x=X_ageg5yr,y=weight2, color=sex)) +
   geom_boxplot()
-p
 ```
+When comparing age to weight, there does seem to be a clear difference in weigh distributions for genders. Male's appear to weigh more than females. <br><br>It should also be noted that there also appear to be adult patients who weigh less than 50 lbs. Future analysis of the data collection process should explore whether these low weight outliers are mistakes or if they reflect patients with serious health issues.
+
 
 ### **Research question 2:**
+#### Do weight, age, and/or gender correlate with diabetes? How? (vars: sex, X_ageg5yr, weight2, diabete3)<br>
+```{r fig.width=12, fig.height=3, error=FALSE, warning=FALSE, message=FALSE}
+ggplot(weight_diabetes, aes(x=X_ageg5yr,y=weight2, color=diabete3)) +
+  geom_boxplot() + 
+  scale_y_continuous()
 
-
+ggplot(weight_diabetes, aes(x = factor(X_ageg5yr), fill = factor(diabete3))) +
+  geom_bar(position="fill")
+```
+```{r fig.width=4, fig.height=3,}
+ggplot(weight_diabetes, aes(x = factor(sex), fill = factor(diabete3))) +
+  geom_bar(position="fill")
+```
+<br>When looking at female and male participants in the sample, the ratio of reporting diabetes appears is very similar. It is likely that difference in gender does not correllate to reporting of diabetes.
 
 ### **Research question 3:**
+#### What is the liklihood that a participant from the sample reports having diabetes given that they are male and weigh 200 lbs or more (given the sample data)? (vars: sex, weight2, diabete3)<br>
 ```{r fig.width=12, fig.height=3, warning=FALSE}
 sex_male_distribution <- binom_sample_dist(weight_diabetes,"sex","Male")
 
@@ -221,8 +239,8 @@ dp_no <- binom_prob_vec(weight_diabetes$diabete3,"No")
 grid.arrange(yes_plot, no_plot, ncol = 2)
 ```
 
-<br>For 'Diabete3', the probability of the participant reporting diabetes is low at around __`r to_percent(dp_yes)`__<br>
-The probability that a participant will report that they do not have diabetes is around __`r to_percent(dp_no)`__<br>
+<br>The probability of the participant reporting diabetes is low at around __`r to_percent(dp_yes)`__<br><br>
+And the probability that a participant will report that they do not have diabetes is around __`r to_percent(dp_no)`__<br>
 
 ```{r warning=FALSE}
 # probability that participant is 200 lbs or more using right tailed distribution
@@ -245,7 +263,8 @@ pvalue
 weight_diabetes$heavy <- ifelse(weight_diabetes$weight2 < 200,"not_heavy","heavy")
 actual <- binom_prob_vec(weight_diabetes$heavy,"heavy")
 ```
-The probability that a participant is heavy is based on lognormed z-score is  __`r to_percent(pvalue)`__. The right-tailed z-score estimate is __`r to_percent(righttailed)`__. The actual percentage is __`r to_percent(actual)`__ 
+<br>
+The likelihood that a randomly selected male from the sample reports having diabetes is  __`r to_percent(pvalue)`__. The right-tailed z-score estimate is __`r to_percent(righttailed)`__. The actual percentage is __`r to_percent(actual)`__ 
 <br>
 
 ```{r}
@@ -257,8 +276,7 @@ The probability that a participant is heavy is based on lognormed z-score is  __
 
 male_diabetes_prob <- binom_prob_vec(subgroup_df(weight_diabetes,'sex','Male')$diabete3,"Yes")
 female_diabetes_prob <- binom_prob_vec(subgroup_df(weight_diabetes,'sex','Female')$diabete3,"Yes")
-#female_diabetes_prob
-#male_diabetes_prob
+
+male_diabetes_prob
+female_diabetes_prob
 ```
-
-
