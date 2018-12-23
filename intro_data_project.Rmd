@@ -122,13 +122,14 @@ __After cleaning:__ <br>[`r clean_dim[1]`] x [`r clean_dim[2]`]
 Because gender is a key variable in biometrics, it is important to explore whether gender might correllate to other variables. In this case, we are looking at whether or not sex correllates with weight.<br>
 
 ### **Research question 2:**<br>
-#### Do weight, age, and/or gender correlate with diabetes? How? (vars: sex, X_ageg5yr, weight2, diabete3)<br>
-The goal of this exploratory project is to determine whether or not weight/gender correlate with diabetes. Knowledge of any correlation could be helpful with regards to informing patients of their likelihood of having diabetes based on their gender and weight.<br>
+#### Does sex or age correlate with diabetes? How? (vars: sex, X_ageg5yr, weight2, diabete3)<br>
+The goal of this exploratory project is to check if weight/gender/age correlates with diabetes. Knowledge of any correlation could be helpful with regards to informing patients of their likelihood of having diabetes based on their gender and weight.<br>
 
 
 ### **Research question 3:**<br>
-#### What is the liklihood that a participant from the sample reports having diabetes given that they are male and weigh 200 lbs or more (given the sample data)? (vars: sex, weight2, diabete3)<br>
-Knowing the liklihood of having a positive diagnosis for diabetes can be valuable for both researchers and patients. We will look at the example scenario and determine what the likelihood is for a male who weighs more than 200 lbs to report having diabetes. 
+#### Is there a relationship among age, weight, and diabetes? (vars: sex, X_ageg5yr, weight2, diabete3)<br>
+To further explore possible correlations with diabetes, we will also look at the relationship between four variables.<br>
+
 <br>
 
 * * *
@@ -148,7 +149,7 @@ hist_log_weight <- ggplot(data=weight_diabetes,aes(log_weight, fill=log_weight))
   geom_histogram(fill='mediumturquoise',color='white') + ggtitle("Histogram [Log_Weight]") + centered
 grid.arrange(hist_weight, hist_log_weight, ncol = 2)
 ```
-<br>For _Weight2_, the distribution is right skewed while the log of _Weight2_ is nearly normal. Because the data is nearly normal and unimodal, a frequentist approach using inferential statistics can be used.
+<br>For _Weight2_, the distribution is right skewed while the log of _Weight2_ is nearly normal. Because the lognormed version of the data is nearly normal and unimodal, the weight can be used for subsequent analyses in inferential statistics.
 <br>
 
 ```{r fig.width=4, fig.height=3, error=FALSE, warning=FALSE, message=FALSE}
@@ -165,202 +166,55 @@ age_count <- ggplot(data=weight_diabetes,aes(X_ageg5yr)) +
   geom_bar(fill='salmon',color='white') + ggtitle("Age") + centered
 age_count
 ```
-The age range appears to be left skewed with extremes at both tails. The large tails are most likely a result of binning where the youngest and oldest age groups account for larger age ranges.
+The age range appears to be left skewed with extremes at both tails. The large tails are most likely a result of binning as the youngest and oldest age ranges account for a larger range of ages.
 <br>
 
 ```{r fig.width=12, fig.height=3, error=FALSE, warning=FALSE, message=FALSE}
 ggplot(weight_diabetes, aes(x=X_ageg5yr,y=weight2, color=sex)) +
   geom_boxplot()
 ```
-When comparing age to weight, there does seem to be a clear difference in weigh distributions for genders. Male's appear to weigh more than females. <br><br>It should also be noted that there also appear to be adult patients who weigh less than 50 lbs. Future analysis of the data collection process should explore whether these low weight outliers are mistakes or if they reflect patients with serious health issues.
+When comparing age to weight, there does seem to be a clear difference in weigh distributions for genders. Male's appear to weigh more than females. <br><br>It should also be noted that there also appear to be adult patients who weigh less than 50 lbs and many patients who weigh around 400 lbs. Future analysis of the data collection process should explore whether these low and high outliers are mistakes or if they reflect patients with serious health issues.
 
 
 ### **Research question 2:**
 #### Do weight, age, and/or gender correlate with diabetes? How? (vars: sex, X_ageg5yr, weight2, diabete3)<br>
-```{r fig.width=12, fig.height=3, error=FALSE, warning=FALSE, message=FALSE}
-ggplot(weight_diabetes, aes(x=X_ageg5yr,y=weight2, color=diabete3)) +
-  geom_boxplot() + 
-  scale_y_continuous()
-
-ggplot(weight_diabetes, aes(x = factor(X_ageg5yr), fill = factor(diabete3))) +
-  geom_bar(position="fill")
-```
 ```{r fig.width=4, fig.height=3,}
 ggplot(weight_diabetes, aes(x = factor(sex), fill = factor(diabete3))) +
   geom_bar(position="fill")
 ```
 <br>When looking at female and male participants in the sample, the ratio of reporting diabetes appears is very similar. It is likely that difference in gender does not correllate to reporting of diabetes.
 
-### **Research question 3:**
-#### What is the liklihood that a participant from the sample reports having diabetes given that they are male and weigh 200 lbs or more (given the sample data)? (vars: sex, weight2, diabete3)<br>
-```{r fig.width=12, fig.height=3, warning=FALSE}
-sex_male_distribution <- binom_sample_dist(weight_diabetes,"sex","Male")
 
-male_plot<-ggplot()+
-  aes(x=sex_male_distribution)+
-  geom_bar(fill='salmon',color='white') + ggtitle("Female - Binom Distribution") + centered
-
-gp_male <- binom_prob_vec(weight_diabetes$sex,"Male")
-
-sex_female_distribution <- binom_sample_dist(weight_diabetes,"sex","Female")
-
-female_plot<-ggplot()+
-  aes(x=sex_female_distribution)+
-  geom_bar(fill='mediumturquoise',color='white') + ggtitle("Male - Binomial Distribution") + centered
-
-gp_female <- binom_prob_vec(weight_diabetes$sex,"Female")
-
-
-grid.arrange(male_plot, female_plot, ncol = 2)
+```{r fig.width=12, fig.height=3, error=FALSE, warning=FALSE, message=FALSE}
+ggplot(weight_diabetes, aes(x = factor(X_ageg5yr), fill = factor(diabete3))) +
+  geom_bar(position="fill")
 ```
-<br> For _Sex_, the probability of the participant being male is __`r to_percent(gp_male)`__ <br>
-<br> The probability of the participant being female is __`r to_percent(gp_female)`__ <br>
+As age increases, the ratio of reported diabetes also appears to increase until 80 years of age and older. It is likely that age has some degree of correllation with diabetes.
 
-```{r fig.width=12, fig.height=3, warning=FALSE}
-
-
-
-diabetes_yes_distribution <- binom_sample_dist(weight_diabetes,"diabete3","Yes")
-yes_plot<- ggplot()+
-  aes(x=diabetes_yes_distribution)+
-  geom_bar(fill='salmon',color='white') + ggtitle("Yes - Binom Dist") + centered
-dp_yes <- binom_prob_vec(weight_diabetes$diabete3,"Yes")
-
-
-diabetes_no_distribution <- binom_sample_dist(weight_diabetes,"diabete3","No")
-no_plot<- ggplot()+
-  aes(x=diabetes_no_distribution)+
-  geom_bar(fill='mediumturquoise',color='white') + ggtitle("No - Binom Dist") + centered
-dp_no <- binom_prob_vec(weight_diabetes$diabete3,"No")
-
-
-grid.arrange(yes_plot, no_plot, ncol = 2)
+```{r fig.width=12, fig.height=3,}
+ggplot(weight_diabetes, aes(x = factor(weight2), fill = factor(diabete3))) +
+  geom_bar(position="fill") +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
 ```
+As weight increases, the ratio of reported diabetes increases. Weight appears to have a strong correllation with reported diabetes and should be explored further.
 
-<br>The probability of the participant reporting diabetes is low at around __`r to_percent(dp_yes)`__<br><br>
-And the probability that a participant will report that they do not have diabetes is around __`r to_percent(dp_no)`__<br>
-
-```{r warning=FALSE}
-# probability that participant is 200 lbs or more using right tailed distribution
-sd_weight <- sd(weight_diabetes$weight2)
-mean_weight <- mean(weight_diabetes$weight2)
-z <- (200-mean_weight)/sd_weight
-righttailed <-1-pnorm(z)
-
-# probability that participant is 200 lbs or more using lognormed distribution
-sd_weight <- sd(weight_diabetes$log_weight)
-mean_weight <- mean(weight_diabetes$log_weight)
-z <- (log(200)-mean_weight)/sd_weight
-1-pnorm(z)
-
-# probability that participant is 200 lbs or more
-pvalue=1-exp(pnorm(log(200),mean_weight,sd_weight, log=TRUE))
-pvalue
-
-# percentage of participants who weigh 200 or more lbs vs those who are under 200 lbs
-weight_diabetes$heavy <- ifelse(weight_diabetes$weight2 < 200,"not_heavy","heavy")
-actual <- binom_prob_vec(weight_diabetes$heavy,"heavy")
+### **Research question 3:**<br>
+#### Is there a relationship among age, weight, and diabetes? (vars: sex, X_ageg5yr, weight2, diabete3)<br>
+```{r fig.width=4, fig.height=3, error=FALSE, warning=FALSE, message=FALSE}
+ggplot(weight_diabetes, aes(x=sex,y=weight2, color=diabete3)) +
+  geom_boxplot() + 
+  scale_y_continuous()
 ```
-<br>
-The likelihood that a randomly selected male from the sample reports having diabetes is  __`r to_percent(pvalue)`__. The right-tailed z-score estimate is __`r to_percent(righttailed)`__. The actual percentage is __`r to_percent(actual)`__ 
+<br>There is a high weight distribution for both men and women who report having diabetes. Males have a heavier weight distribution than women.
 <br>
 
-```{r}
-#gp_male
-#gp_female
-
-#dp_no
-#dp_yes
-
-male_diabetes_prob <- binom_prob_vec(subgroup_df(weight_diabetes,'sex','Male')$diabete3,"Yes")
-female_diabetes_prob <- binom_prob_vec(subgroup_df(weight_diabetes,'sex','Female')$diabete3,"Yes")
-
-male_diabetes_prob
-female_diabetes_prob
+```{r fig.width=12, fig.height=3, error=FALSE, warning=FALSE, message=FALSE}
+ggplot(weight_diabetes, aes(x=X_ageg5yr,y=weight2, color=diabete3)) +
+  geom_boxplot() + 
+  scale_y_continuous()
 ```
+This collection of boxplots depicts a much clearer story. Patients who report having diabetes appear to be heavier in every age range. Younger patients who report having diabetes appear to have a larger weight range than older patients. While it is unclear how age correllates with diabetes and weight, this relationship should be further explored.
 
-The probability that the participant reports having diabetes given that he is male is the probability that the participant is male multiplied by the probability that a participant reported having diabetes:
-
-
-```{r}
-#to_percent(gp_male * dp_yes)
-```
-The probability that a participant reported diabetes given that the participant is male is __`r to_percent(gp_male * dp_yes)`__.
-
-```{r}
-# Tutorial by: http://www.harrysurden.com/wordpress/archives/292
-# R Conditional Probability Tree Diagram
- 
-# The Rgraphviz graphing package must be installed to do this
-require("Rgraphviz")
- 
-# Assign probabilities
-a<-round(gp_male,digits= 3)
-bGivena<-round(male_diabetes_prob,digits= 3)
-bGivenNota<-round(female_diabetes_prob,digits= 3)
- 
-# Calculations
-notbGivena<-1-bGivena
-notA<-1-a
-notbGivenNota<-1-bGivenNota
-aANDb<-a*bGivena
-aANDnotb<-a*notbGivena
-notaANDb <- notA*bGivenNota
-notaANDnotb <- notA*notbGivenNota
-b<- aANDb + notaANDb
-notB <- 1-b
-aGivenb <- aANDb / b
-
-# Text notation 
-node1<-"Pa"
-node2<-"M"
-node3<-"F"
-node4<-"M&D"
-node5<-"M&D'"
-node6<-"F&D"
-node7<-"F&D'"
-nodeNames<-c(node1,node2,node3,node4, node5,node6, node7)
-rEG <- new("graphNEL", nodes=nodeNames, edgemode="directed")
- 
-# Draw the "lines" or "branches" of the probability Tree
-rEG <- addEdge(nodeNames[1], nodeNames[2], rEG, 1)
-rEG <- addEdge(nodeNames[1], nodeNames[3], rEG, 1)
-rEG <- addEdge(nodeNames[2], nodeNames[4], rEG, 1)
-rEG <- addEdge(nodeNames[2], nodeNames[5], rEG, 1)
-rEG <- addEdge(nodeNames[3], nodeNames[6], rEG, 1)
-rEG <- addEdge(nodeNames[3], nodeNames[7], rEG, 10)
- 
-eAttrs <- list()
-q<-edgeNames(rEG)
-
-# Add the probability values to the the branch lines
-eAttrs$label <- c(toString(a),toString(notA),
- toString(bGivena), toString(notbGivena),
- toString(bGivenNota), toString(notbGivenNota))
-names(eAttrs$label) <- c(q[1],q[2], q[3], q[4], q[5], q[6])
-edgeAttrs<-eAttrs
- 
-# Set the color, etc, of the tree
-attributes<-list(node=list(label="foo", fillcolor="lightgreen", fontsize="15"),
- edge=list(color="red"),graph=list(rankdir="LR"))
- 
-#Plot the probability tree using Rgraphvis
-plot(rEG, edgeAttrs=eAttrs, attrs=attributes)
-#nodes(rEG)
-#edges(rEG)
- 
-#Add the probability values to the leaves of A&B, A&B', A'&B, A'&B'
-text(520,250,aANDb, cex=.8)
-text(520,180,aANDnotb,cex=.8)
-text(520,100,notaANDb,cex=.8)
-text(520,30,notaANDnotb,cex=.8)
-text(340,260,"(D | M)",cex=.8)
-text(340,130,"(D | F')",cex=.8)
- 
-#Write a table in the lower left of the probablites of A and B
-text(80,50,paste("P(M):",a),cex=.9, col="darkgreen")
-text(80,20,paste("P(F):",notA),cex=.9, col="darkgreen")
-text(160,50,paste("P(D):",round(b,digits=2)),cex=.9)
-text(160,20,paste("P(D'):",round(notB, 2)),cex=.9)
-text(100,220,paste("P(M|D): ",round(aGivenb,digits=2)),cex=.9,col="blue")
-```
+## Part 4: Conclusions
+From initial exploration of the data, it is clear that some features have stronger correllations than others. Weight has some relationship with gender. Gender does not appear to correllate with weight. Diabetes does, however, seem to correllate with age and strongly correllates with weight. 
