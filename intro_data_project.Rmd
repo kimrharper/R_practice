@@ -6,8 +6,10 @@ output:
     highlight: pygments
     theme: spacelab
 ---
+__Author:__ Ryan Harper<br><br>
+
 __Dataset:__ Behavioral Risk Factor Surveillance System Data <br><br>
-__Source:__ https://www.cdc.gov/brfss/<br><br>
+__Source:__ https://www.cdc.gov/brfss/ <br><br>
 __Summary:__ The data set is a collection of responses from ~400,000 questionnaires across the United States on health related topics. BRFSS started in the 1980s and has been used to monitor pervasive illnesses in the US through questionnaires. The research is a standardized questionairre with additional questions varying by state. Interviewers reach partipant in house and by telephone. The telephone surveys are conducted using "Random Digit Dialing (RDD) techniques on both landlines and cell phones" so much of the data appears to be from random sampling. The research is retroactive and not a designed experiment so while correlation can be inferred, causality cannot.
 
 The features in the data set are both continuous and categorical. Some features are missing values so data preprocessing is essential. Because the participants were selected randomly the sample can be generalized. <br><br>
