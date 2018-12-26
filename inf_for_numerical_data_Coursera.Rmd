@@ -263,7 +263,7 @@ your project as well.)
 
 ```{r pick-your-own}
 inference(y=mage, x=gender, data = nc, statistic = "mean", type = "ci",  
-          alternative = "twosided", method = "theoretical")
+          alternative = "onesided", method = "theoretical")
 ```
 
 
