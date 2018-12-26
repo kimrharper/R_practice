@@ -262,8 +262,8 @@ your project as well.)
 </div>
 
 ```{r pick-your-own}
-# type your code for the Exercise here, and Knit
-
+inference(y=mage, x=gender, data = nc, statistic = "mean", type = "ci",  
+          alternative = "twosided", method = "theoretical")
 ```
 
 
