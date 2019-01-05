@@ -38,7 +38,7 @@ load("gss.Rdata")
 
 ## Part 2: Research question
 
-
+Do violent experiences correllate with political views?
 
 * * *
 
