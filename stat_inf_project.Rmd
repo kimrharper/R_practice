@@ -32,6 +32,10 @@ load("gss.Rdata")
 * * *
 
 ## Part 1: Data
+Loading Data:
+```{r load-data}
+
+```
 
 
 * * *
