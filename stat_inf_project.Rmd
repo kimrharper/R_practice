@@ -34,7 +34,9 @@ load("gss.Rdata")
 ## Part 1: Data
 Loading Data:
 ```{r}
-gss
+hypothesis_set <- c("age", "educ","relig","partyid","race")
+test_case <- gss[hypothesis_set]
+test_case
 ```
 
 
@@ -42,7 +44,7 @@ gss
 
 ## Part 2: Research question
 
-Do violent experiences correllate with political views?
+Does religion correllate with political party afiliation?
 
 * * *
 
