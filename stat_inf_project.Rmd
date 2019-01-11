@@ -15,6 +15,8 @@ output:
 library(ggplot2)
 library(dplyr)
 library(statsr)
+library(kableExtra)
+library(tidyr)
 ```
 
 ### Load data
@@ -36,7 +38,12 @@ Loading Data:
 ```{r}
 hypothesis_set <- c("age", "educ","relig","partyid","race")
 test_case <- gss[hypothesis_set]
-test_case
+test_case <- subset(test_case, relig != 'NA')
+test_case <- subset(test_case, partyid != 'NA')
+test_case <- subset(test_case, race != 'NA')
+
+kable(head(test_case,n=5)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive", full_width = F))
 ```
 
 
@@ -44,15 +51,41 @@ test_case
 
 ## Part 2: Research question
 
-Does religion correllate with political party afiliation?
+Do non-religious members have a higher party affiliation with Democrats than with Replublicans religion correllate?
 
 * * *
 
 ## Part 3: Exploratory data analysis
 
-NOTE: Insert code chunks as needed by clicking on the "Insert a new code chunk" 
-button (green button with orange arrow) above. Make sure that your code is visible
-in the project you submit. Delete this note when before you submit your work.
+
+```{r collapse = TRUE, results = 'hold'}
+t1 <-test_case %>%
+  group_by(relig) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+kable(t1) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", position = "left"))
+
+ggplot(data=t1, aes(x=relig, y=count)) +
+  geom_bar(stat="identity") +
+  coord_flip()
+```
+
+```{r collapse = TRUE, results = 'hold'}
+t2 <-test_case %>%
+  group_by(partyid) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+kable(t2) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", position = "left"))
+
+ggplot(data=t2, aes(x=partyid, y=count)) +
+  geom_bar(stat="identity") +
+  coord_flip()
+```
+
 
 * * *
 
